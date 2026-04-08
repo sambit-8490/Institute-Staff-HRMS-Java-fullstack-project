@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 28@Mahesh
+      MYSQL_DATABASE: worksphere
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./Backend
+    container_name: backend
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/worksphere?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 28@Mahesh
+
+  frontend:
+    build: ./Frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    env_file:
+      - ./Frontend/.env
+
+volumes:
+  mysql_data:
